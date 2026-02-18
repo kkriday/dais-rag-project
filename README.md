@@ -53,8 +53,11 @@ project10/
 ├── data/
 │   └── input/
 │
-├── requirements.txt
-└── README.md
+├──.gitlab-ci.yml
+├── Architecture Diagram
+├── docker-compose.yml
+├── README.md
+└── requirements.txt
 
 ---
 
@@ -157,16 +160,50 @@ Expected result:
 ```
 
 ---
+## Database Schema
 
-## Acceptance Criteria Coverage
+### Documents Table
 
-✔ Reads PDFs and text files from input directory  
-✔ Extracts metadata (filename, size, modified time)  
-✔ Extracts text from PDFs  
-✔ Tokenizes and removes stopwords  
-✔ Generates embeddings via Ollama  
-✔ Stores embeddings in PostgreSQL (pgvector)  
-✔ Database is containerized  
+CREATE TABLE documents (
+    doc_id TEXT PRIMARY KEY,
+    source_path TEXT,
+    file_name TEXT,
+    file_type TEXT,
+    file_size_bytes BIGINT,
+    modified_time TIMESTAMPTZ
+);
+
+### Chunks Table
+
+CREATE TABLE chunks (
+    chunk_id TEXT PRIMARY KEY,
+    doc_id TEXT REFERENCES documents(doc_id),
+    chunk_index INTEGER,
+    text_clean TEXT,
+    embedding VECTOR(768)
+);
 
 ---
 
+## Acceptance Criteria Coverage
+
+✔ Reads PDFs and text files from input directory
+✔ Extracts metadata (filename, size, modified time)
+✔ Extracts text from PDFs
+✔ Tokenizes and removes stopwords
+✔ Generates embeddings via Ollama
+✔ Stores embeddings in PostgreSQL (pgvector)
+✔ Database is containerized
+✔ GitLab repository connected
+✔ GitLab CI pipeline configured
+
+---
+
+## Performance Summary
+✔	267 chunks processed successfully
+✔	Embedding dimension: 768
+✔	Zero insertion errors
+✔	Safe upsert handling
+✔	Fully containerized database
+
+---
