@@ -1,0 +1,18 @@
+stages:
+  - validate
+
+validate_python:
+  stage: validate
+  image: python:3.11-slim
+  before_script:
+    - python --version
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
+  script:
+    # 1) Syntax/compile check for everything in app/
+    - python -m compileall app
+
+    # 2) Basic import smoke test (fails fast if imports are broken)
+    - python -c "import app.main; print('✅ imports ok')"
+  rules:
+    - if: $CI_COMMIT_BRANCH
