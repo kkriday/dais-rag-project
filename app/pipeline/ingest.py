@@ -1,26 +1,41 @@
+from __future__ import annotations
+
 from pathlib import Path
+from typing import Dict, Any
+
 from pypdf import PdfReader
 
 
-def extract_text_from_txt(file_path: Path) -> str:
-    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-        return f.read()
+def extract_pdf_text(pdf_path: str) -> Dict[str, Any]:
+    """
+    Extract raw text per page from a PDF.
+    Returns dict with doc_id and pages list.
+    """
+    path = Path(pdf_path)
+    reader = PdfReader(str(path))
+
+    pages = []
+    for i, page in enumerate(reader.pages):
+        text = page.extract_text() or ""
+        pages.append({"page": i + 1, "text": text})
+
+    return {
+        "doc_id": path.stem,
+        "source_path": str(path),
+        "num_pages": len(pages),
+        "pages": pages,
+    }
 
 
-def extract_text_from_pdf(file_path: Path) -> str:
-    reader = PdfReader(str(file_path))
-    text = ""
-    for page in reader.pages:
-        page_text = page.extract_text()
-        if page_text:
-            text += page_text + "\n"
-    return text
+def save_extracted(doc: Dict[str, Any], out_dir: str = "data/extracted") -> str:
+    out_path = Path(out_dir)
+    out_path.mkdir(parents=True, exist_ok=True)
 
+    # Save as one big txt for now (simple)
+    txt_file = out_path / f"{doc['doc_id']}.txt"
+    with open(txt_file, "w", encoding="utf-8") as f:
+        for p in doc["pages"]:
+            f.write(f"\n\n--- PAGE {p['page']} ---\n\n")
+            f.write(p["text"])
 
-def extract_text(file_path: Path) -> str:
-    if file_path.suffix.lower() == ".txt":
-        return extract_text_from_txt(file_path)
-    elif file_path.suffix.lower() == ".pdf":
-        return extract_text_from_pdf(file_path)
-    else:
-        raise ValueError("Unsupported file type")
+    return str(txt_file)
