@@ -3,23 +3,19 @@ import json
 import time
 from typing import Any, Dict, List
 
-# ✅ IMPORTANT:
-# Replace this import with YOUR actual query entrypoint used by the chat interface.
-#
-# Examples you might have:
-# from app.rag import answer_question
-# from app.pipeline import query
-# from app.main import rag_answer
-#
-# The function should look like:
-#   def answer_question(question: str, top_k: int = 5) -> dict:
-#       return {"answer": "...", "sources": [...], "retrieved": [...]}
-#
-# For now, we define a placeholder. Replace it.
+from app.pipeline import answer_query
+
+
 def answer_question(question: str, top_k: int = 5) -> Dict[str, Any]:
-    raise NotImplementedError(
-        "Replace answer_question() with your project's actual RAG query function."
-    )
+    """
+    Adapter for batch runner. Reuses the same query path as the chat app.
+    """
+    resp = answer_query(question, k=top_k)
+    return {
+        "answer": resp.get("answer", ""),
+        "sources": resp.get("sources", []),
+        "retrieved": resp.get("sources", []),
+    }
 
 
 def read_jsonl(path: str) -> List[Dict[str, Any]]:

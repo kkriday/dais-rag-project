@@ -11,5 +11,16 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  app:
+    build: .
+    container_name: m02_app
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgresql://m02:m02pass@postgres:5432/m02db
+    volumes:
+      - ./data:/app/data
+    command: python -m app.main
+
 volumes:
   pgdata:
