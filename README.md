@@ -386,9 +386,3 @@ Expected: writes `results.jsonl` with `answer`, `sources`, and `latency_ms` per 
 - `embeddings.position_ids | UNEXPECTED`: safe to ignore for this model; embeddings still work.
 
 ---
-
-## Legacy (M02) Postgres/pgvector Path (Optional)
-
-This repo previously supported storing embeddings in PostgreSQL/pgvector using Ollama. If you need it, keep using `docker-compose.yml` / `store_postgres.py`.
-
-For M03 grading, the primary pipeline is the semantic index stored under `data/index/`.
