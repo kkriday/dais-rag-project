@@ -13,6 +13,14 @@ CHUNKS_PATH = Path("data/chunks/chunks.jsonl")
 INDEX_DIR = Path("data/index")
 EMB_PATH = INDEX_DIR / "embeddings.npy"
 META_PATH = INDEX_DIR / "meta.jsonl"
+_MODEL: SentenceTransformer | None = None
+
+
+def _get_model() -> SentenceTransformer:
+    global _MODEL
+    if _MODEL is None:
+        _MODEL = SentenceTransformer(MODEL_NAME)
+    return _MODEL
 
 
 def load_chunks_jsonl(path: Path = CHUNKS_PATH) -> List[Dict[str, Any]]:
@@ -26,7 +34,7 @@ def load_chunks_jsonl(path: Path = CHUNKS_PATH) -> List[Dict[str, Any]]:
 
 
 def build_embeddings(rows: List[Dict[str, Any]]) -> Tuple[np.ndarray, List[Dict[str, Any]]]:
-    model = SentenceTransformer(MODEL_NAME)
+    model = _get_model()
     texts = [r["text"] for r in rows]
     emb = model.encode(texts, normalize_embeddings=True, show_progress_bar=True)
     emb = np.asarray(emb, dtype=np.float32)
@@ -58,3 +66,13 @@ def build_and_save_index() -> str:
     emb, meta = build_embeddings(rows)
     save_index(emb, meta)
     return f"saved: {EMB_PATH} (shape={emb.shape}), meta: {META_PATH} (rows={len(meta)})"
+
+
+def generate_embedding(text: str) -> List[float]:
+    """
+    Backward-compatible M02 embedding API used by app/main.py.
+    Returns a single normalized embedding vector as a Python list.
+    """
+    model = _get_model()
+    emb = model.encode([text], normalize_embeddings=True, show_progress_bar=False)
+    return np.asarray(emb[0], dtype=np.float32).tolist()

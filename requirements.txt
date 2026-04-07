@@ -1,3 +1,9 @@
 pypdf
 nltk
 requests
+psycopg[binary]
+pgvector
+sentence-transformers
+torch
+numpy
+streamlit

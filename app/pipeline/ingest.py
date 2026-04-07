@@ -39,3 +39,21 @@ def save_extracted(doc: Dict[str, Any], out_dir: str = "data/extracted") -> str:
             f.write(p["text"])
 
     return str(txt_file)
+
+
+def extract_text(path_like: str | Path) -> str:
+    """
+    Backward-compatible helper used by the M02 pipeline entrypoint.
+    Supports .pdf and .txt inputs and returns full extracted text.
+    """
+    path = Path(path_like)
+    suffix = path.suffix.lower()
+
+    if suffix == ".pdf":
+        doc = extract_pdf_text(str(path))
+        return "\n\n".join(p["text"] for p in doc["pages"])
+
+    if suffix == ".txt":
+        return path.read_text(encoding="utf-8", errors="ignore")
+
+    raise ValueError(f"Unsupported file type for extraction: {path}")

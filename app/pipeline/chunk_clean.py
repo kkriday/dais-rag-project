@@ -1,8 +1,13 @@
 import re
 from typing import List
+import nltk
 from nltk.corpus import stopwords
 
-STOPWORDS = set(stopwords.words("english"))
+try:
+    STOPWORDS = set(stopwords.words("english"))
+except LookupError:
+    nltk.download("stopwords", quiet=True)
+    STOPWORDS = set(stopwords.words("english"))
 
 def chunk_text(text: str, chunk_size: int = 1200, overlap: int = 200) -> List[str]:
     text = text.strip()
