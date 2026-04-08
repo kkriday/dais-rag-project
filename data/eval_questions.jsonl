@@ -1,0 +1,50 @@
+{"id": "q01", "question": "What are Home Depot's Scope 1 and Scope 2 carbon emissions reduction targets?", "expected_keywords": ["42%", "2030", "Scope 1", "Scope 2"]}
+{"id": "q02", "question": "What are the five environmental pillars of Home Depot's sustainability strategy?", "expected_keywords": ["Carbon Emissions", "Sustainable Forestry", "Circularity", "Water Conservation", "Responsible Chemistry"]}
+{"id": "q03", "question": "What is the Science Based Targets initiative (SBTi)?", "expected_keywords": ["SBTi", "emissions", "targets"]}
+{"id": "q04", "question": "What is Home Depot's Scope 3 Category 11 emissions reduction goal?", "expected_keywords": ["42%", "2030", "Scope 3", "Category 11"]}
+{"id": "q05", "question": "How does Home Depot use renewable energy?", "expected_keywords": ["renewable", "energy", "solar", "fuel cell"]}
+{"id": "q06", "question": "What is the Eco Actions program?", "expected_keywords": ["Eco Actions", "customers", "environmental"]}
+{"id": "q07", "question": "What are Home Depot's water conservation goals?", "expected_keywords": ["water", "conservation", "WaterSense"]}
+{"id": "q08", "question": "What is Home Depot's approach to responsible chemistry?", "expected_keywords": ["chemistry", "chemicals", "formaldehyde", "phthalates"]}
+{"id": "q09", "question": "What is the circularity strategy at Home Depot?", "expected_keywords": ["circularity", "recycling", "waste"]}
+{"id": "q10", "question": "How does Home Depot support sustainable forestry?", "expected_keywords": ["forestry", "wood", "deforestation"]}
+{"id": "q11", "question": "What pay equity initiatives does Home Depot have?", "expected_keywords": ["pay equity", "compensation", "associates"]}
+{"id": "q12", "question": "What associate safety programs are in place at Home Depot?", "expected_keywords": ["safety", "associates", "injury"]}
+{"id": "q13", "question": "What training and development programs does Home Depot offer?", "expected_keywords": ["training", "development", "associates"]}
+{"id": "q14", "question": "What are Home Depot's maternity and family benefits?", "expected_keywords": ["maternity", "benefits", "associates"]}
+{"id": "q15", "question": "What is the Retool Your School program?", "expected_keywords": ["Retool Your School", "HBCU", "campus"]}
+{"id": "q16", "question": "How does Home Depot support veterans?", "expected_keywords": ["veterans", "housing", "careers"]}
+{"id": "q17", "question": "What is the Path to Pro program?", "expected_keywords": ["Path to Pro", "trades", "training"]}
+{"id": "q18", "question": "How does Home Depot approach disaster relief?", "expected_keywords": ["disaster", "relief", "communities"]}
+{"id": "q19", "question": "What is Home Depot's supplier diversity program?", "expected_keywords": ["supplier", "diversity"]}
+{"id": "q20", "question": "What are Home Depot's human rights policies?", "expected_keywords": ["human rights", "suppliers", "labor"]}
+{"id": "q21", "question": "What data security and privacy measures does Home Depot have?", "expected_keywords": ["data", "security", "privacy"]}
+{"id": "q22", "question": "How does Home Depot approach political involvement?", "expected_keywords": ["political", "lobbying", "PAC"]}
+{"id": "q23", "question": "What is Home Depot's total GHG emissions footprint?", "expected_keywords": ["GHG", "emissions", "MT CO2e"]}
+{"id": "q24", "question": "What energy efficiency investments has Home Depot made in its stores?", "expected_keywords": ["energy", "efficiency", "LED", "HVAC", "lighting"]}
+{"id": "q25", "question": "What is Home Depot's fuel cell energy capacity?", "expected_keywords": ["fuel cell", "MWac", "204"]}
+{"id": "q26", "question": "What percentage of Home Depot's emissions come from Scope 3?", "expected_keywords": ["Scope 3", "majority", "Use of Sold Products"]}
+{"id": "q27", "question": "What products does Home Depot offer to help customers reduce their environmental impact?", "expected_keywords": ["energy", "products", "customers", "environmental"]}
+{"id": "q28", "question": "What is the Home Depot Foundation?", "expected_keywords": ["Foundation", "communities", "veterans"]}
+{"id": "q29", "question": "How does Home Depot measure associate engagement?", "expected_keywords": ["associate", "engagement", "survey"]}
+{"id": "q30", "question": "What are Home Depot's goals related to career advancement for frontline associates?", "expected_keywords": ["frontline", "career", "50,000"]}
+{"id": "q31", "question": "What is Home Depot's stance on ethics and compliance?", "expected_keywords": ["ethics", "compliance", "conduct"]}
+{"id": "q32", "question": "What UN Sustainable Development Goals does Home Depot align with?", "expected_keywords": ["UN SDG", "Sustainable Development Goals"]}
+{"id": "q33", "question": "How does Home Depot handle end-of-life product disposal?", "expected_keywords": ["end of life", "disposal", "recycling", "circularity"]}
+{"id": "q34", "question": "What is Home Depot's strategy for reducing supply chain emissions?", "expected_keywords": ["supply chain", "emissions", "transportation"]}
+{"id": "q35", "question": "What is the Paris Agreement and how does Home Depot align with it?", "expected_keywords": ["Paris Agreement", "1.5 degrees", "emissions"]}
+{"id": "q36", "question": "How many stores does Home Depot operate?", "expected_keywords": ["stores", "locations", "facilities"]}
+{"id": "q37", "question": "What is Home Depot's revenue or financial performance in fiscal 2023?", "expected_keywords": ["revenue", "sales", "fiscal 2023"]}
+{"id": "q38", "question": "What diversity and inclusion initiatives does Home Depot have for associates?", "expected_keywords": ["diversity", "inclusion", "associate resource groups"]}
+{"id": "q39", "question": "What is Home Depot's approach to product safety?", "expected_keywords": ["product safety", "chemicals", "standards"]}
+{"id": "q40", "question": "What packaging sustainability efforts does Home Depot pursue?", "expected_keywords": ["packaging", "sustainable", "plastic"]}
+{"id": "q41", "question": "What is Home Depot's approach to reducing neonicotinoids?", "expected_keywords": ["neonicotinoids", "live goods", "pollinator"]}
+{"id": "q42", "question": "What is Home Depot's white roofing program?", "expected_keywords": ["white roofing", "energy", "stores"]}
+{"id": "q43", "question": "What is Home Depot's approach to responsible sourcing?", "expected_keywords": ["sourcing", "suppliers", "responsible"]}
+{"id": "q44", "question": "What is the GHG Protocol and how does Home Depot use it?", "expected_keywords": ["GHG Protocol", "reporting", "emissions"]}
+{"id": "q45", "question": "What is Home Depot's goal for reducing kilowatt-hour electricity use?", "expected_keywords": ["kilowatt", "electricity", "20%", "2010"]}
+{"id": "q46", "question": "How does Home Depot support affordable housing?", "expected_keywords": ["affordable housing", "veterans", "communities"]}
+{"id": "q47", "question": "What are Home Depot's Scope 2 market-based emissions figures?", "expected_keywords": ["Scope 2", "market-based", "MT CO2e"]}
+{"id": "q48", "question": "What is Home Depot's approach to reducing formaldehyde in products?", "expected_keywords": ["formaldehyde", "flooring", "laminate"]}
+{"id": "q49", "question": "What is Home Depot's carbon emissions baseline year?", "expected_keywords": ["2020", "base year", "baseline"]}
+{"id": "q50", "question": "What is Home Depot's strategy for engaging suppliers on sustainability?", "expected_keywords": ["suppliers", "sustainability", "engagement"]}
