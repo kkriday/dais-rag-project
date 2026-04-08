@@ -1,23 +1,37 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Optional, Tuple, List
+import os
+import requests
+from typing import Any, Dict, Optional, List
 
 from .retrieve import retrieve_context, RetrievedChunk
 
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1")
+
+
+def _llm_synthesize(query: str, context: str) -> str:
+    """Call Ollama to synthesize an answer from retrieved context."""
+    prompt = (
+        f"You are a helpful assistant. Use only the context below to answer the question.\n"
+        f"If the answer is not in the context, say ‘I could not find that information in the document.’\n\n"
+        f"Context:\n{context}\n\n"
+        f"Question: {query}\n\n"
+        f"Answer:"
+    )
+    try:
+        resp = requests.post(
+            f"{OLLAMA_URL}/api/generate",
+            json={"model": OLLAMA_MODEL, "prompt": prompt, "stream": False},
+            timeout=120,
+        )
+        resp.raise_for_status()
+        return resp.json().get("response", "").strip()
+    except Exception as e:
+        return f"[LLM unavailable: {e}]"
+
 
 def ingest_corpus(corpus_path: str, *, stores: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    """
-    M03 ingestion orchestrator (MINIMAL placeholder).
-
-    Later this should:
-    - load PDFs/texts from corpus_path
-    - extract text + metadata
-    - chunk
-    - embed + index into vector store
-    - persist doc/chunk metadata into a doc store
-
-    For now it returns a status dict so the function exists and your app can wire to it.
-    """
     return {
         "status": "ok",
         "message": "ingest_corpus is scaffolded. Next: implement ingest->chunk->embed->store.",
@@ -27,25 +41,16 @@ def ingest_corpus(corpus_path: str, *, stores: Optional[Dict[str, Any]] = None) 
 
 def answer_query(query: str, *, stores: Optional[Dict[str, Any]] = None, k: int = 5) -> Dict[str, Any]:
     """
-    M03 chat entrypoint (MINIMAL).
-
-    - Retrieves top-k context chunks
-    - Returns a basic answer + sources (chunk/doc/page)
-
-    Later: plug in your LLM to synthesize an answer grounded in retrieved text.
+    Retrieves top-k context chunks then synthesizes a grounded answer via Ollama llama3.1.
     """
     chunks: List[RetrievedChunk] = retrieve_context(query, k=k, stores=stores)
 
-    # Minimal placeholder "answer" so you can demo end-to-end wiring.
     if not chunks:
-        answer = "I couldn’t find relevant context yet (retrieval is still being wired)."
+        answer = "I could not find relevant information in the documents."
         sources = []
     else:
         combined_text = "\n\n".join([c.text for c in chunks])
-        answer = f"""Based on the retrieved document sections:
-
-    {combined_text}
-    """
+        answer = _llm_synthesize(query, combined_text)
         sources = [
             {
                 "doc_id": c.doc_id,
