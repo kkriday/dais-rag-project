@@ -1,0 +1,35 @@
+#,Criterion,Max Points,2026-04-07
+,M01 - Project Definition,,
+1.1,Variation and Corpus Selection,40,40
+1.2,User Persona and Key Use Cases,40,40
+,M01 Subtotal,80,80
+,M02 - Data Pipeline CI/CD Setup,,
+2.1,Code Quality,30,20
+2.2,Pipeline Functionality,30,20
+2.3,Architecture Diagram,30,30
+2.4,Documentation & Reproducibility,30,10
+,M02 Subtotal,120,80
+,M03 - Agentic Prototype,,
+3.1,Multi-Agent Pipeline,40,20
+3.2,Document Ingestion & Storage,40,30
+3.3,Dual Interface Implementation,40,10
+3.4,Architecture & Reproducibility,40,20
+,M03 Subtotal,160,80
+,M04 - Evaluation Framework Baseline,,
+4.1,Evaluation Test Set Execution,40,0
+4.2,Quantitative Performance Analysis,40,0
+4.3,Error Analysis & Failure Identification,40,0
+4.4,Improvement Strategy Proposals,40,0
+,M04 Subtotal,160,0
+,M05 - Iterative Improvement,,
+5.1,System Refinements Implementation,40,0
+5.2,Ablation Study,40,0
+5.3,Comparative Results & Impact Assessment,40,0
+5.4,Iteration Report,40,0
+,M05 Subtotal,160,0
+,M06 - Final Deliverables,,
+6.1,Deployed DAIS System,40,0
+6.2,Technical Report,40,0
+6.3,Demo Video & In-Class Presentation,40,0
+,M06 Subtotal,120,0
+,Grand Total,800,240
