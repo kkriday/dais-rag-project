@@ -57,3 +57,20 @@ def extract_text(path_like: str | Path) -> str:
         return path.read_text(encoding="utf-8", errors="ignore")
 
     raise ValueError(f"Unsupported file type for extraction: {path}")
+
+if __name__ == "__main__":
+    from chunk import chunk_extracted_txt, save_chunks_jsonl
+
+    PDF_PATHS = [
+        "data/input/Lowes_2024_Annual_Report_Website_compressed.pdf",
+        "data/input/Mohawk_2024_Impact_Report_compressed.pdf",
+    ]
+
+    for pdf in PDF_PATHS:
+        doc = extract_pdf_text(pdf)
+        txt_path = save_extracted(doc)
+        print(f"Extracted: {txt_path}")
+
+        chunks = chunk_extracted_txt(txt_path)
+        save_chunks_jsonl(chunks, f"data/chunks/{Path(pdf).stem}_chunks.jsonl")
+        print(f"{len(chunks)} chunks saved")

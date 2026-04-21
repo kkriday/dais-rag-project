@@ -1,73 +1,85 @@
-# Document Pipeline (M02 + M03)
+# DAIS — Document AI System (M02 → M05)
 
-This repository now supports both:
-- `M02`: PDF/TXT ingestion, cleaning, embedding, and PostgreSQL+pgvector storage
-- `M03`: retrieval + chat + batch query evaluation on persisted local index files
-
-## What Was Fixed
-
-The evaluation blockers were addressed:
-- `app/main.py` import errors fixed by adding backward-compatible APIs:
-  - `extract_text()` in `app/pipeline/ingest.py`
-  - `generate_embedding()` in `app/pipeline/embed.py`
-- `app/batch_query.py` is now wired to the real query path (`app.pipeline.answer_query`) and no longer raises `NotImplementedError`
-- `requirements.txt` now includes required runtime dependencies (`psycopg`, `sentence-transformers`, `torch`, `numpy`, `streamlit`, etc.)
-- application containerization added (`Dockerfile` + `app` service in `docker-compose.yml`)
-- pipeline package imports are lazy (`app/pipeline/__init__.py`) to avoid unnecessary import-time failures
-- `nltk` stopwords loading is auto-healed in `chunk_clean.py`
+A multi-agent pipeline that ingests corporate PDF/TXT documents, builds a
+hybrid BM25 + semantic search index, and answers natural-language questions
+via an LLM (Ollama llama3.1).
 
 ## Project Structure
 
 ```text
 project10/
 ├── app/
-│   ├── main.py
-│   ├── chat_app.py
-│   ├── batch_query.py
+│   ├── main.py              # Full pipeline runner (ingest → embed → store)
+│   ├── chat_app.py          # Streamlit chat interface
+│   ├── batch_query.py       # Batch evaluation runner
 │   └── pipeline/
-│       ├── ingest.py
-│       ├── chunk_clean.py
-│       ├── chunk.py
-│       ├── embed.py
-│       ├── retrieve.py
-│       ├── orchestrate.py
-│       ├── store_postgres.py
+│       ├── ingest.py        # PDF/TXT text extraction
+│       ├── chunk.py         # Page-aware character chunking
+│       ├── chunk_clean.py   # Stopword removal + tokenization
+│       ├── embed.py         # Sentence-transformer embeddings
+│       ├── retrieve.py      # Hybrid BM25 + semantic retrieval (RRF)
+│       ├── orchestrate.py   # Multi-query answer synthesis via Ollama
+│       ├── store_postgres.py# pgvector storage
 │       └── __init__.py
 ├── data/
-│   ├── input/
-│   ├── extracted/
-│   ├── chunks/
-│   └── index/
-├── docker-compose.yml
+│   ├── input/               # Place PDFs/TXTs here
+│   ├── extracted/           # Plain-text output per document
+│   ├── chunks/              # JSONL chunk files per document
+│   ├── index/               # embeddings.npy + meta.jsonl
+│   ├── eval_questions.jsonl # 100-question evaluation set
+│   └── eval_results*.jsonl  # Evaluation outputs
+├── docker-compose.yml       # PostgreSQL + Ollama services
 ├── Dockerfile
 ├── requirements.txt
-├── questions.jsonl
 └── README.md
 ```
 
 ## Prerequisites
 
-- Python 3.11+ (project has been used with 3.14)
+- Python 3.11+
 - Docker + Docker Compose
+- **Ollama** — required for LLM answer synthesis
+
+  Install from https://ollama.com, then pull the model:
+  ```bash
+  ollama pull llama3.1
+  ```
+  Ollama must be running (`ollama serve`) before starting the chat or batch
+  query interfaces. Alternatively, use the Docker Compose service (see below).
 
 ## Setup
 
 ```bash
-cd /Users/kridaysmacair/project10
+git clone <repo-url>
+cd <repo-directory>
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## M02: Run Ingestion -> DB (pgvector)
+## Running with Docker Compose (Recommended)
 
-### 1) Start PostgreSQL
+Starts PostgreSQL (pgvector) and Ollama together:
+
+```bash
+docker compose up -d
+```
+
+Then pull the LLM model inside the Ollama container:
+
+```bash
+docker exec ollama_service ollama pull llama3.1
+```
+
+## M02: Ingest Documents → PostgreSQL/pgvector
+
+### 1. Start PostgreSQL
 
 ```bash
 docker compose up -d postgres
 ```
 
-### 2) Create extension and tables
+### 2. Create extension and tables
 
 ```bash
 docker exec -it pg_m02 psql -U m02 -d m02db -c "CREATE EXTENSION IF NOT EXISTS vector;"
@@ -80,7 +92,6 @@ CREATE TABLE IF NOT EXISTS documents (
   file_size_bytes BIGINT,
   modified_time TIMESTAMPTZ
 );
-
 CREATE TABLE IF NOT EXISTS chunks (
   chunk_id TEXT PRIMARY KEY,
   doc_id TEXT REFERENCES documents(doc_id),
@@ -91,69 +102,56 @@ CREATE TABLE IF NOT EXISTS chunks (
 SQL
 ```
 
-### 3) Run pipeline
+### 3. Place PDFs in `data/input/` and run pipeline
 
 ```bash
 python -m app.main
 ```
 
-### 4) Verify writes
+### 4. Verify writes
 
 ```bash
-docker exec -it pg_m02 psql -U m02 -d m02db -c "SELECT COUNT(*) AS documents FROM documents;"
-docker exec -it pg_m02 psql -U m02 -d m02db -c "SELECT COUNT(*) AS chunks FROM chunks;"
+docker exec -it pg_m02 psql -U m02 -d m02db -c "SELECT COUNT(*) FROM documents;"
+docker exec -it pg_m02 psql -U m02 -d m02db -c "SELECT COUNT(*) FROM chunks;"
 ```
 
-## M03: Build Local Index + Query
+## M03: Build Index + Chat + Batch Query
 
-### 1) Extract PDF to text
+### Option A — Full pipeline in one call
+
+```python
+from app.pipeline.orchestrate import ingest_corpus
+result = ingest_corpus("data/input/")
+print(result)
+```
+
+### Option B — Step by step
 
 ```bash
-python -c "from app.pipeline.ingest import extract_pdf_text, save_extracted; doc=extract_pdf_text('data/input/2024_Home_Depot_ESG_Report_8.15.24.2_vF.2.pdf'); print(save_extracted(doc), doc['num_pages'])"
+# 1. Extract, chunk, and build embeddings index
+python -m app.pipeline.embed
+
+# 2. Start chat interface
+streamlit run app/chat_app.py
+# → open http://localhost:8501
+
+# 3. Run batch evaluation
+python -m app.batch_query --in data/eval_questions.jsonl --out data/eval_results.jsonl --top-k 8
 ```
 
-### 2) Chunk extracted text
+## M04 / M05: Evaluation
 
 ```bash
-python -c "from app.pipeline.chunk import chunk_extracted_txt, save_chunks_jsonl; c=chunk_extracted_txt('data/extracted/2024_Home_Depot_ESG_Report_8.15.24.2_vF.2.txt'); print(len(c), save_chunks_jsonl(c))"
+# Run all 100 evaluation questions
+python -m app.batch_query --in data/eval_questions.jsonl --out data/eval_results_m05_full.jsonl --top-k 8
 ```
 
-### 3) Build embeddings index
+Results include `answer`, `sources`, and `latency_ms` per question.
 
-```bash
-python -c "from app.pipeline.embed import build_and_save_index; print(build_and_save_index())"
-```
+## Environment Variables
 
-### 4) Run chat app
-
-```bash
-python -m streamlit run app/chat_app.py
-```
-
-### 5) Run batch evaluation
-
-```bash
-python -m app.batch_query --in questions.jsonl --out results.jsonl --top-k 5
-```
-
-## Full App Container Run (Optional)
-
-```bash
-docker compose up --build app
-```
-
-## Verification Commands For Submission
-
-Use these to show exactly what changed:
-
-```bash
-git status --short
-git diff -- app/pipeline/ingest.py app/pipeline/embed.py app/pipeline/chunk_clean.py app/pipeline/__init__.py app/batch_query.py requirements.txt docker-compose.yml Dockerfile README.md
-```
-
-Use these to show it works:
-
-```bash
-python -m app.batch_query --in questions.jsonl --out results.jsonl --top-k 3
-head -n 3 results.jsonl
-```
+| Variable | Default | Description |
+|---|---|---|
+| `OLLAMA_URL` | `http://localhost:11434` | Ollama API endpoint |
+| `OLLAMA_MODEL` | `llama3.1` | Model name to use |
+| `DATABASE_URL` | — | PostgreSQL connection string |

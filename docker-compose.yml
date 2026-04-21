@@ -11,16 +11,27 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama_service
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
   app:
     build: .
     container_name: m02_app
     depends_on:
       - postgres
+      - ollama
     environment:
       DATABASE_URL: postgresql://m02:m02pass@postgres:5432/m02db
+      OLLAMA_URL: http://ollama:11434
     volumes:
       - ./data:/app/data
     command: python -m app.main
 
 volumes:
   pgdata:
+  ollama_data:
