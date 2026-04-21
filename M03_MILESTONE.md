@@ -24,18 +24,25 @@
 
 ### How to run the pipeline
 
-**Prerequisites:** Docker running, Python dependencies installed.
+**Prerequisites:** Docker running, Python dependencies installed, Ollama running with `llama3.1` pulled.
 
 ```bash
-# 1. Start the database
+# 1. Start PostgreSQL + Ollama
 docker compose up -d
 
 # 2. Install dependencies
 pip install -r requirements.txt
 
-# 3. Run the full pipeline
+# 3. Option A — orchestrated single call (ingest → chunk → embed → index)
+python -c "from app.pipeline.orchestrate import ingest_corpus; print(ingest_corpus('data/input/'))"
+
+# 3. Option B — step by step via main.py (also stores to PostgreSQL)
 python -m app.main
 ```
+
+`ingest_corpus()` in `app/pipeline/orchestrate.py` wires all stages end-to-end:
+PDF/TXT → `ingest.py` (extract) → `chunk.py` (chunk) → `embed.py` (embed + save index).
+PostgreSQL upserts are performed when a `stores` handle is passed.
 
 Place PDF or text files in `data/input/` before running.
 

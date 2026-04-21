@@ -9,7 +9,7 @@ from sentence_transformers import SentenceTransformer
 
 
 MODEL_NAME = "all-MiniLM-L6-v2"
-CHUNKS_PATH = Path("data/chunks/chunks.jsonl")
+CHUNKS_DIR = Path("data/chunks")
 INDEX_DIR = Path("data/index")
 EMB_PATH = INDEX_DIR / "embeddings.npy"
 META_PATH = INDEX_DIR / "meta.jsonl"
@@ -23,13 +23,14 @@ def _get_model() -> SentenceTransformer:
     return _MODEL
 
 
-def load_chunks_jsonl(path: Path = CHUNKS_PATH) -> List[Dict[str, Any]]:
-    if not path.exists():
-        raise FileNotFoundError(f"Chunks file not found: {path}")
+def load_chunks_jsonl(path: Path = None) -> List[Dict[str, Any]]:
     rows = []
-    with path.open("r", encoding="utf-8") as f:
-        for line in f:
-            rows.append(json.loads(line))
+    files = [path] if path else sorted(CHUNKS_DIR.glob("*.jsonl"))
+    for file in files:
+        with file.open("r", encoding="utf-8") as f:
+            for line in f:
+                rows.append(json.loads(line))
+    print(f"✅ Loaded {len(rows)} chunks from {len(files)} file(s)")
     return rows
 
 
@@ -44,7 +45,6 @@ def build_embeddings(rows: List[Dict[str, Any]]) -> Tuple[np.ndarray, List[Dict[
             "chunk_id": r["chunk_id"],
             "doc_id": r["doc_id"],
             "page": r.get("page"),
-            # keep a small preview; full text stays in chunks.jsonl
             "text_preview": (r["text"][:200] + "...") if len(r["text"]) > 200 else r["text"],
         }
         for r in rows
@@ -69,10 +69,10 @@ def build_and_save_index() -> str:
 
 
 def generate_embedding(text: str) -> List[float]:
-    """
-    Backward-compatible M02 embedding API used by app/main.py.
-    Returns a single normalized embedding vector as a Python list.
-    """
     model = _get_model()
     emb = model.encode([text], normalize_embeddings=True, show_progress_bar=False)
     return np.asarray(emb[0], dtype=np.float32).tolist()
+
+if __name__ == "__main__":
+    result = build_and_save_index()
+    print(result)

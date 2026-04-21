@@ -48,3 +48,53 @@
 {"id": "q48", "question": "What is Home Depot's approach to reducing formaldehyde in products?", "expected_keywords": ["formaldehyde", "flooring", "laminate"]}
 {"id": "q49", "question": "What is Home Depot's carbon emissions baseline year?", "expected_keywords": ["2020", "base year", "baseline"]}
 {"id": "q50", "question": "What is Home Depot's strategy for engaging suppliers on sustainability?", "expected_keywords": ["suppliers", "sustainability", "engagement"]}
+{"id": "q51", "question": "How many home improvement stores does Lowe's operate in the United States?", "expected_keywords": ["1,748", "stores", "outlets"]}
+{"id": "q52", "question": "What is Lowe's total fiscal year 2024 net sales?", "expected_keywords": ["$83 billion", "sales", "fiscal 2024"]}
+{"id": "q53", "question": "How many associates does Lowe's employ?", "expected_keywords": ["300,000", "associates"]}
+{"id": "q54", "question": "What is Lowe's adjusted operating margin for fiscal 2024?", "expected_keywords": ["12.3%", "adjusted operating margin"]}
+{"id": "q55", "question": "What is Lowe's adjusted diluted earnings per share for fiscal 2024?", "expected_keywords": ["$11.99", "diluted earnings per share"]}
+{"id": "q56", "question": "How much free cash flow did Lowe's generate in fiscal 2024?", "expected_keywords": ["$7.7 billion", "free cash flow"]}
+{"id": "q57", "question": "How much capital did Lowe's return to shareholders in fiscal 2024?", "expected_keywords": ["$6.5 billion", "shareholders"]}
+{"id": "q58", "question": "What is the MyLowe's Rewards program and how many members enrolled by year-end?", "expected_keywords": ["MyLowe's Rewards", "30 million", "members"]}
+{"id": "q59", "question": "How much more do MyLowe's Rewards members spend compared to non-members?", "expected_keywords": ["50%", "members", "non-members"]}
+{"id": "q60", "question": "What is Mylow on Lowes.com?", "expected_keywords": ["Mylow", "AI", "advisor", "DIY"]}
+{"id": "q61", "question": "What is the MyRedVest app at Lowe's?", "expected_keywords": ["MyRedVest", "associates", "AI"]}
+{"id": "q62", "question": "What new online marketplace did Lowe's launch in 2024?", "expected_keywords": ["marketplace", "online", "2024"]}
+{"id": "q63", "question": "What are Lowe's four community pillars?", "expected_keywords": ["safe", "affordable housing", "community", "skilled trades", "disaster"]}
+{"id": "q64", "question": "What starting wage did Lowe's announce in 2024?", "expected_keywords": ["$15", "starting wage"]}
+{"id": "q65", "question": "What percentage of Lowe's store leadership roles are filled internally?", "expected_keywords": ["85%", "store leadership", "internally"]}
+{"id": "q66", "question": "How many customer transactions does Lowe's serve per week?", "expected_keywords": ["16 million", "transactions", "week"]}
+{"id": "q67", "question": "How has Lowe's board diversity changed from 2018 to 2024?", "expected_keywords": ["46%", "62%", "board", "diversity"]}
+{"id": "q68", "question": "How has Lowe's EVP diversity changed from 2018 to 2024?", "expected_keywords": ["10%", "67%", "EVP"]}
+{"id": "q69", "question": "What was Lowe's comparable sales performance in fiscal 2024?", "expected_keywords": ["comparable sales", "fiscal 2024"]}
+{"id": "q70", "question": "Which product categories had comparable sales increases at Lowe's in fiscal 2024?", "expected_keywords": ["Building Materials", "Hardware", "comparable sales"]}
+{"id": "q71", "question": "What is the total retail selling space of Lowe's stores?", "expected_keywords": ["195 million", "square feet", "selling space"]}
+{"id": "q72", "question": "What is Lowe's common stock par value?", "expected_keywords": ["$0.50", "par value", "common stock"]}
+{"id": "q73", "question": "How many Lowe's shares were outstanding as of March 2025?", "expected_keywords": ["559", "million", "shares"]}
+{"id": "q74", "question": "What is Lowe's Total Home strategy targeting the Pro customer?", "expected_keywords": ["Total Home", "Pro", "strategy"]}
+{"id": "q75", "question": "What cybersecurity risks does Lowe's identify related to generative AI?", "expected_keywords": ["generative AI", "cybersecurity", "risks"]}
+{"id": "q76", "question": "What is Mohawk's position in the global flooring market?", "expected_keywords": ["world's largest", "flooring", "company"]}
+{"id": "q77", "question": "In how many countries does Mohawk sell its products?", "expected_keywords": ["180 countries"]}
+{"id": "q78", "question": "In how many countries does Mohawk have manufacturing operations?", "expected_keywords": ["19 countries", "manufacturing"]}
+{"id": "q79", "question": "What are Mohawk's three business segments?", "expected_keywords": ["Global Ceramic", "Flooring North America", "Flooring Rest of World"]}
+{"id": "q80", "question": "What is Mohawk's reduction in Scope 1, 2 and biogenic emissions intensity since 2010?", "expected_keywords": ["30%", "Scope 1", "Scope 2", "biogenic", "2010"]}
+{"id": "q81", "question": "By how much has Mohawk increased its renewable energy since 2010?", "expected_keywords": ["117%", "renewable energy"]}
+{"id": "q82", "question": "What is Mohawk's reduction in water withdrawal intensity since 2010?", "expected_keywords": ["45%", "water withdrawal", "2010"]}
+{"id": "q83", "question": "What is Mohawk's reduction in waste-to-landfill intensity since 2010?", "expected_keywords": ["47%", "waste-to-landfill"]}
+{"id": "q84", "question": "How many plastic water bottles has Mohawk recycled into flooring over the past decade?", "expected_keywords": ["60", "billion", "plastic", "bottles"]}
+{"id": "q85", "question": "What is the SolidTech R product and what is its sustainability feature?", "expected_keywords": ["SolidTech R", "recycled", "plastic", "20 recycled water bottles"]}
+{"id": "q86", "question": "What is Mohawk's Continuum process?", "expected_keywords": ["Continuum", "plastic bottles", "carpet fiber"]}
+{"id": "q87", "question": "What is the ReCover program and what expansion happened in 2024?", "expected_keywords": ["ReCover", "residential flooring", "2024"]}
+{"id": "q88", "question": "Who is Mohawk's CEO?", "expected_keywords": ["Jeff Lorberbaum", "CEO"]}
+{"id": "q89", "question": "Who is Mohawk's Chief Sustainability Officer?", "expected_keywords": ["Malisa Maynard", "CSO"]}
+{"id": "q90", "question": "What sustainability reporting frameworks does Mohawk follow?", "expected_keywords": ["GRI", "ISSB", "SASB", "TCFD", "CDP"]}
+{"id": "q91", "question": "What is Mohawk's approach to political contributions and political engagement?", "expected_keywords": ["political contributions", "candidates", "parties", "PAC"]}
+{"id": "q92", "question": "What is the Mohawk ESG Executive Council and who does it report to?", "expected_keywords": ["ESG Executive Council", "NCGC", "Board"]}
+{"id": "q93", "question": "What EcoVadis ranking did Godfrey Hirst achieve in 2024?", "expected_keywords": ["Gold Medal", "EcoVadis", "Godfrey Hirst", "top 5%"]}
+{"id": "q94", "question": "What was Mohawk's ethics training completion rate in 2024?", "expected_keywords": ["99%", "training", "2024"]}
+{"id": "q95", "question": "What is the Mohawk Ethics Hotline?", "expected_keywords": ["Ethics Hotline", "anonymous", "24/7"]}
+{"id": "q96", "question": "What is Mohawk's Double Materiality Assessment?", "expected_keywords": ["Double Materiality", "DMA", "risks", "opportunities"]}
+{"id": "q97", "question": "How many trees has Mohawk planted in partnership?", "expected_keywords": ["132,000", "trees", "planted"]}
+{"id": "q98", "question": "What percentage of Mohawk's wood fiber sourcing adheres to responsible sourcing principles?", "expected_keywords": ["99%", "wood fiber", "FSC", "PEFC"]}
+{"id": "q99", "question": "What is Unilin chipboard and how does it incorporate wood waste?", "expected_keywords": ["Unilin", "chipboard", "wood waste", "1.4", "billion"]}
+{"id": "q100", "question": "What logistics sustainability measures has Mohawk implemented to reduce fleet emissions?", "expected_keywords": ["auto shut-off", "trucks", "idling", "backhauls"]}
