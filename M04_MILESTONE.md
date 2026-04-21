@@ -4,11 +4,11 @@
 
 ### Test Set Description
 
-- **Total items:** 50 questions
+- **Total items:** 50 questions (M04 baseline set; the full eval set has since been expanded to 100 in M05)
 - **Format:** JSONL — each line is a JSON object with `id`, `question`, and `expected_keywords` fields
-- **Source document:** 2024 Home Depot ESG Report (single PDF, 110+ pages)
+- **Source documents:** 2024 Home Depot ESG Report (primary, 110+ pages); corpus has since expanded to include Lowe's 2024 Annual Report and Mohawk 2024 Impact Report in M05
 - **Coverage:** Questions span all major report sections — carbon emissions, sustainability pillars, forestry, water, circularity, chemistry, associate programs, community investments, financial disclosures, governance
-- **File:** `data/eval_questions.jsonl`
+- **File:** `data/eval_questions.jsonl` (questions q01–q50)
 
 ### How It Was Run
 
