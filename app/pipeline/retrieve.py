@@ -7,6 +7,7 @@ import json
 
 import numpy as np
 from sentence_transformers import SentenceTransformer
+from rank_bm25 import BM25Okapi
 
 MODEL_NAME = "all-MiniLM-L6-v2"
 
@@ -56,10 +57,12 @@ _model: Optional[SentenceTransformer] = None
 _emb: Optional[np.ndarray] = None
 _meta: Optional[List[Dict[str, Any]]] = None
 _chunks_map: Optional[Dict[str, Dict[str, Any]]] = None
+_bm25: Optional[BM25Okapi] = None
+_bm25_ids: Optional[List[str]] = None
 
 
 def _ensure_loaded() -> None:
-    global _model, _emb, _meta, _chunks_map
+    global _model, _emb, _meta, _chunks_map, _bm25, _bm25_ids
 
     if _model is None:
         _model = SentenceTransformer(MODEL_NAME)
@@ -75,35 +78,60 @@ def _ensure_loaded() -> None:
     if _chunks_map is None:
         _chunks_map = _load_chunks_map()
 
+    if _bm25 is None and _chunks_map:
+        # Build BM25 index over all chunk texts
+        chunk_list = list(_chunks_map.values())
+        _bm25_ids = [c["chunk_id"] for c in chunk_list]
+        tokenized = [c["text"].lower().split() for c in chunk_list]
+        _bm25 = BM25Okapi(tokenized)
+
 
 def retrieve_context(query: str, k: int = 5, *, stores: Optional[Dict[str, Any]] = None) -> List[RetrievedChunk]:
     """
-    Semantic retrieval using cosine similarity on normalized embeddings.
+    Hybrid retrieval: combines semantic cosine similarity with BM25 keyword search
+    using Reciprocal Rank Fusion (RRF).
     """
     _ensure_loaded()
-    assert _model is not None and _emb is not None and _meta is not None and _chunks_map is not None
+    assert _model is not None and _emb is not None and _meta is not None
+    assert _chunks_map is not None and _bm25 is not None and _bm25_ids is not None
 
+    fetch_k = min(k * 4, len(_meta))  # fetch more candidates before fusion
+
+    # --- Semantic scores ---
     q = _model.encode([query], normalize_embeddings=True)
-    q = np.asarray(q, dtype=np.float32)  # (1, d)
+    q = np.asarray(q, dtype=np.float32)
+    sims = (_emb @ q[0])
+    sem_top_idx = np.argsort(-sims)[:fetch_k]
+    sem_chunk_ids = [_meta[int(i)]["chunk_id"] for i in sem_top_idx]
 
-    # cosine similarity since vectors are normalized: sim = dot(q, emb)
-    sims = (_emb @ q[0])  # (n,)
+    # --- BM25 scores ---
+    bm25_scores = _bm25.get_scores(query.lower().split())
+    bm25_top_idx = np.argsort(-bm25_scores)[:fetch_k]
+    bm25_chunk_ids = [_bm25_ids[int(i)] for i in bm25_top_idx]
 
-    top_idx = np.argsort(-sims)[:k]
+    # --- Reciprocal Rank Fusion ---
+    rrf_scores: Dict[str, float] = {}
+    for rank, cid in enumerate(sem_chunk_ids):
+        rrf_scores[cid] = rrf_scores.get(cid, 0.0) + 1.0 / (60 + rank + 1)
+    for rank, cid in enumerate(bm25_chunk_ids):
+        rrf_scores[cid] = rrf_scores.get(cid, 0.0) + 1.0 / (60 + rank + 1)
+
+    top_ids = sorted(rrf_scores, key=lambda x: -rrf_scores[x])[:k]
+
+    # Build semantic score lookup for reporting
+    sem_score_map = {_meta[int(i)]["chunk_id"]: float(sims[int(i)]) for i in sem_top_idx}
 
     results: List[RetrievedChunk] = []
-    for idx in top_idx:
-        m = _meta[int(idx)]
-        chunk_id = m["chunk_id"]
-        row = _chunks_map.get(chunk_id, {})
+    for cid in top_ids:
+        row = _chunks_map.get(cid, {})
         results.append(
             RetrievedChunk(
-                chunk_id=chunk_id,
-                doc_id=m.get("doc_id", row.get("doc_id", "")),
+                chunk_id=cid,
+                doc_id=row.get("doc_id", ""),
                 page=row.get("page"),
                 text=row.get("text", ""),
-                score=float(sims[int(idx)]),
-                meta={"text_preview": m.get("text_preview")},
+                score=sem_score_map.get(cid, rrf_scores[cid]),
+                meta={"rrf_score": rrf_scores[cid]},
             )
         )
 
