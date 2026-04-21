@@ -165,11 +165,21 @@ def answer_query(query: str, *, stores: Optional[Dict[str, Any]] = None, k: int 
     if not top_chunks:
         return {"query": query, "answer": "I could not find relevant information in the documents.", "sources": [], "k": k}
 
+    # Build a system note listing every document in the index so the LLM
+    # is always aware of what's loaded, even if a doc isn't in the top-k chunks.
+    all_doc_ids = sorted({c.doc_id for c in merged.values()})
+    all_names = [_friendly_name(d) for d in all_doc_ids]
+    if len(all_names) < len(_DOC_NAMES):
+        # Ensure every known document is mentioned even if retrieval missed it
+        known = [n for n in _DOC_NAMES.values() if n not in all_names]
+        all_names = sorted(set(all_names) | set(known))
+    doc_list_note = "Documents loaded in this system: " + ", ".join(all_names) + "."
+
     context_parts = [
         f"[Document: {_friendly_name(c.doc_id)}, Page {c.page}]\n{c.text}"
         for c in top_chunks
     ]
-    answer = _llm_synthesize(query, "\n\n".join(context_parts))
+    answer = _llm_synthesize(query, doc_list_note + "\n\n" + "\n\n".join(context_parts))
 
     sources = [
         {"doc_id": c.doc_id, "chunk_id": c.chunk_id, "page": c.page, "score": c.score}
