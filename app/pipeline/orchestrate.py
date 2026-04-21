@@ -13,8 +13,12 @@ OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1")
 def _llm_synthesize(query: str, context: str) -> str:
     """Call Ollama to synthesize an answer from retrieved context."""
     prompt = (
-        f"You are a helpful assistant. Use only the context below to answer the question.\n"
-        f"If the answer is not in the context, say ‘I could not find that information in the document.’\n\n"
+        f"You are a precise assistant answering questions about a corporate ESG report.\n"
+        f"Use ONLY the context below. Preserve exact technical terms, brand names, numbers, "
+        f"abbreviations, and proper nouns exactly as they appear in the context "
+        f"(e.g. ‘UN SDGs’, ‘WaterSense’, ‘SBTi’, ‘neonicotinoids’, ‘42%’, ‘MT CO2e’).\n"
+        f"Give a concise, direct answer. If the answer is not in the context, "
+        f"say ‘I could not find that information in the document.’\n\n"
         f"Context:\n{context}\n\n"
         f"Question: {query}\n\n"
         f"Answer:"
