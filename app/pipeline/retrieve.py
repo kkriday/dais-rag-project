@@ -80,28 +80,57 @@ def _ensure_loaded() -> None:
         _bm25 = BM25Okapi(tokenized)
 
 
-def retrieve_context(query: str, k: int = 5, *, stores: Optional[Dict[str, Any]] = None) -> List[RetrievedChunk]:
+def retrieve_context(
+    query: str,
+    k: int = 5,
+    *,
+    stores: Optional[Dict[str, Any]] = None,
+    doc_filter: Optional[str] = None,
+) -> List[RetrievedChunk]:
     """
     Hybrid retrieval: combines semantic cosine similarity with BM25 keyword search
     using Reciprocal Rank Fusion (RRF).
+
+    doc_filter: if set, restricts retrieval to chunks whose doc_id matches this value.
     """
     _ensure_loaded()
     assert _model is not None and _emb is not None and _meta is not None
     assert _chunks_map is not None and _bm25 is not None and _bm25_ids is not None
 
-    fetch_k = min(k * 4, len(_meta))
+    # Build filtered views when a doc_filter is active
+    if doc_filter:
+        allowed = {cid for cid, row in _chunks_map.items() if row.get("doc_id") == doc_filter}
+        meta_filtered = [m for m in _meta if m["chunk_id"] in allowed]
+        bm25_ids_filtered = [cid for cid in _bm25_ids if cid in allowed]
+        # Index positions in the original arrays for the filtered subset
+        meta_idx_map = {m["chunk_id"]: i for i, m in enumerate(_meta)}
+        bm25_idx_map = {cid: i for i, cid in enumerate(_bm25_ids)}
+        sem_indices = [meta_idx_map[m["chunk_id"]] for m in meta_filtered]
+        bm25_indices = [bm25_idx_map[cid] for cid in bm25_ids_filtered]
+    else:
+        meta_filtered = _meta
+        bm25_ids_filtered = _bm25_ids
+        sem_indices = list(range(len(_meta)))
+        bm25_indices = list(range(len(_bm25_ids)))
+
+    fetch_k = min(k * 4, len(meta_filtered))
+    if fetch_k == 0:
+        return []
 
     # --- Semantic scores ---
     q = _model.encode([query], normalize_embeddings=True)
     q = np.asarray(q, dtype=np.float32)
     sims = (_emb @ q[0])
-    sem_top_idx = np.argsort(-sims)[:fetch_k]
-    sem_chunk_ids = [_meta[int(i)]["chunk_id"] for i in sem_top_idx]
+
+    filtered_sims = sims[np.array(sem_indices)]
+    sem_top_local = np.argsort(-filtered_sims)[:fetch_k]
+    sem_chunk_ids = [meta_filtered[int(i)]["chunk_id"] for i in sem_top_local]
 
     # --- BM25 scores ---
     bm25_scores = _bm25.get_scores(query.lower().split())
-    bm25_top_idx = np.argsort(-bm25_scores)[:fetch_k]
-    bm25_chunk_ids = [_bm25_ids[int(i)] for i in bm25_top_idx]
+    filtered_bm25 = bm25_scores[np.array(bm25_indices)]
+    bm25_top_local = np.argsort(-filtered_bm25)[:fetch_k]
+    bm25_chunk_ids = [bm25_ids_filtered[int(i)] for i in bm25_top_local]
 
     # --- Reciprocal Rank Fusion ---
     rrf_scores: Dict[str, float] = {}
@@ -112,7 +141,10 @@ def retrieve_context(query: str, k: int = 5, *, stores: Optional[Dict[str, Any]]
 
     top_ids = sorted(rrf_scores, key=lambda x: -rrf_scores[x])[:k]
 
-    sem_score_map = {_meta[int(i)]["chunk_id"]: float(sims[int(i)]) for i in sem_top_idx}
+    sem_score_map = {
+        meta_filtered[int(i)]["chunk_id"]: float(filtered_sims[int(i)])
+        for i in sem_top_local
+    }
 
     results: List[RetrievedChunk] = []
     for cid in top_ids:

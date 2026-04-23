@@ -64,7 +64,7 @@ def _llm_synthesize(query: str, context: str) -> str:
         "1. Preserve exact numbers, percentages, brand names, abbreviations, and technical terms "
         "as they appear (e.g. ‘42%’, ‘MT CO2e’, ‘SBTi’, ‘WaterSense’, ‘neonicotinoids’).\n"
         "2. Write the answer in clean, flowing prose or a concise bullet list. "
-        "Do NOT insert any source or document references inside the answer text.\n"
+        "Do NOT include any page numbers, document names, or source references anywhere in the answer.\n"
         "3. For multi-part answers, use a numbered or bulleted list.\n"
         "4. If the answer is not in the context, respond exactly: "
         "’I could not find that information in the provided documents.’\n\n"
@@ -146,21 +146,55 @@ def ingest_corpus(corpus_path: str, *, stores: Optional[Dict[str, Any]] = None) 
     }
 
 
-def answer_query(query: str, *, stores: Optional[Dict[str, Any]] = None, k: int = 8) -> Dict[str, Any]:
+def answer_query(
+    query: str,
+    *,
+    stores: Optional[Dict[str, Any]] = None,
+    k: int = 8,
+    doc_filter: Optional[str] = None,
+) -> Dict[str, Any]:
     """
     Multi-query hybrid retrieval → LLM synthesis with inline source citations.
     Generates 2-3 query variants, merges results by best RRF score, passes
     source-labeled context to the LLM.
+
+    doc_filter: if set, restricts retrieval to a single document's chunks.
     """
     queries = _expand_queries(query)
 
     merged: Dict[str, RetrievedChunk] = {}
     for q in queries:
-        for chunk in retrieve_context(q, k=k * 2, stores=stores):
+        for chunk in retrieve_context(q, k=k * 2, stores=stores, doc_filter=doc_filter):
             if chunk.chunk_id not in merged or chunk.score > merged[chunk.chunk_id].score:
                 merged[chunk.chunk_id] = chunk
 
     top_chunks = sorted(merged.values(), key=lambda c: c.score, reverse=True)[:k]
+
+    # Guarantee every known document has at least one chunk in context —
+    # only when no filter is active (single-doc filter intentionally narrows scope).
+    represented = {c.doc_id for c in top_chunks}
+    for doc_id in ([] if doc_filter else _DOC_NAMES):
+        if doc_id in represented:
+            continue
+        # Try to find the best chunk for this doc from the wider merged pool first
+        doc_chunks = sorted(
+            [c for c in merged.values() if c.doc_id == doc_id],
+            key=lambda c: c.score, reverse=True,
+        )
+        if not doc_chunks:
+            # Fall back: targeted retrieval using the doc's friendly name as a hint
+            targeted = retrieve_context(
+                f"{query} {_friendly_name(doc_id)}", k=4, stores=stores
+            )
+            doc_chunks = sorted(
+                [c for c in targeted if c.doc_id == doc_id],
+                key=lambda c: c.score, reverse=True,
+            )
+        if doc_chunks:
+            # Swap out the lowest-scoring chunk to keep total at k
+            top_chunks[-1] = doc_chunks[0]
+            top_chunks = sorted(top_chunks, key=lambda c: c.score, reverse=True)
+            represented.add(doc_id)
 
     if not top_chunks:
         return {"query": query, "answer": "I could not find relevant information in the documents.", "sources": [], "k": k}
