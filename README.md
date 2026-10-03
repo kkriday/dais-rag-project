@@ -1,157 +1,151 @@
-# DAIS — Document AI System (M02 → M05)
+# DAIS: Document AI Question-Answering System
 
-A multi-agent pipeline that ingests corporate PDF/TXT documents, builds a
-hybrid BM25 + semantic search index, and answers natural-language questions
-via an LLM (Ollama llama3.1).
+DAIS is a retrieval-augmented generation (RAG) system that answers natural-language
+questions about long corporate reports. It ingests PDFs, indexes them with hybrid
+keyword and semantic search, and uses a locally hosted LLM to write answers grounded
+in the source text, with page-level citations.
 
-## Project Structure
+It was built and evaluated on three 2024 corporate reports (Home Depot ESG,
+Lowe's Annual Report, Mohawk Impact Report): 815 indexed passages in total.
+
+![Architecture diagram](Architecture%20diagram.png)
+
+## Results
+
+Evaluated on a hand-built set of 100 questions, each with expected answer keywords:
+
+| Metric | Score |
+|---|---|
+| Answer relevance (LLM judge) | **4.91 / 5** |
+| Faithfulness to sources (LLM judge) | **4.51 / 5** |
+| Context relevance (LLM judge) | **4.50 / 5** |
+| Average keyword recall | **78%** (up from a 74.7% semantic-only baseline) |
+
+The biggest gains came from adding BM25 keyword search alongside semantic search
+and from query expansion. For example, a question about "Scope 2 market-based"
+emissions went from 33% to 100% recall once exact-term matching was added.
+The full write-up, including ablations and failure analysis, is in
+[TECHNICAL_REPORT.md](TECHNICAL_REPORT.md).
+
+## How it works
+
+**Ingestion**
+1. **Extract:** pull text from each PDF page by page with `pypdf`.
+2. **Chunk:** split each page into ~1,200-character passages with overlap, keeping the page number.
+3. **Embed:** encode passages with the `all-MiniLM-L6-v2` sentence-transformer (384-dim).
+4. **Index:** save embeddings and metadata to a flat-file index; optionally store them in PostgreSQL + pgvector.
+
+**Answering a question**
+1. **Query expansion:** generate 2–3 rephrasings of the question (no LLM call needed).
+2. **Hybrid retrieval:** score passages with both cosine similarity and BM25.
+3. **Reciprocal Rank Fusion:** merge the two rankings and keep the top 8 passages,
+   making sure each loaded document is represented.
+4. **Grounded generation:** Llama 3.1 (via Ollama) answers using only the labeled
+   passages, preserving exact numbers and terms.
+5. **Citations:** the answer is returned with its source document, page, and relevance score.
+
+**Evaluation**
+- Batch runner over the 100-question set, recording answers, sources and latency.
+- Keyword recall against expected terms per question.
+- LLM-as-judge scoring of faithfulness, answer relevance and context relevance.
+
+## Tech stack
+
+| Area | Tools |
+|---|---|
+| Language | Python 3.11 |
+| Document processing | pypdf, NLTK |
+| Retrieval | sentence-transformers, rank-bm25, NumPy |
+| Vector database | PostgreSQL 16 + pgvector |
+| LLM | Llama 3.1 8B served locally with Ollama |
+| Interface | Streamlit chat app |
+| Infrastructure | Docker, Docker Compose, GitLab CI |
+
+## Features
+
+- Streamlit chat interface with an expandable source panel per answer
+- Filter answers to a single document or search across all of them
+- Handles several numbered questions in one message
+- Runs fully locally: no paid APIs, no data leaves the machine
+- Reproducible batch evaluation and LLM-judge scripts
+
+## Project structure
 
 ```text
-project10/
-├── app/
-│   ├── main.py              # Full pipeline runner (ingest → embed → store)
-│   ├── chat_app.py          # Streamlit chat interface
-│   ├── batch_query.py       # Batch evaluation runner
-│   └── pipeline/
-│       ├── ingest.py        # PDF/TXT text extraction
-│       ├── chunk.py         # Page-aware character chunking
-│       ├── chunk_clean.py   # Stopword removal + tokenization
-│       ├── embed.py         # Sentence-transformer embeddings
-│       ├── retrieve.py      # Hybrid BM25 + semantic retrieval (RRF)
-│       ├── orchestrate.py   # Multi-query answer synthesis via Ollama
-│       ├── store_postgres.py# pgvector storage
-│       └── __init__.py
-├── data/
-│   ├── input/               # Place PDFs/TXTs here
-│   ├── extracted/           # Plain-text output per document
-│   ├── chunks/              # JSONL chunk files per document
-│   ├── index/               # embeddings.npy + meta.jsonl
-│   ├── eval_questions.jsonl # 100-question evaluation set
-│   └── eval_results*.jsonl  # Evaluation outputs
-├── docker-compose.yml       # PostgreSQL + Ollama services
-├── Dockerfile
-├── requirements.txt
-└── README.md
+app/
+├── chat_app.py          # Streamlit chat interface
+├── batch_query.py       # Batch question runner for evaluation
+├── eval_llm_judge.py    # LLM-as-judge scoring
+├── main.py              # Ingestion into PostgreSQL/pgvector
+└── pipeline/
+    ├── ingest.py        # PDF/TXT text extraction
+    ├── chunk.py         # Page-aware chunking
+    ├── chunk_clean.py   # Stopword removal and tokenization
+    ├── embed.py         # Embeddings and flat-file index
+    ├── retrieve.py      # Hybrid BM25 + semantic retrieval (RRF)
+    ├── orchestrate.py   # Query expansion and answer synthesis
+    └── store_postgres.py# pgvector storage
+data/
+├── input/               # Source PDFs
+├── chunks/              # Chunked passages (JSONL)
+├── index/               # embeddings.npy + meta.jsonl
+├── eval_questions.jsonl # 100-question evaluation set
+└── eval_*results*.jsonl # Evaluation outputs
 ```
 
-## Prerequisites
+## Running it locally
 
-- Python 3.11+
-- Docker + Docker Compose
-- **Ollama** — required for LLM answer synthesis
-
-  Install from https://ollama.com, then pull the model:
-  ```bash
-  ollama pull llama3.1
-  ```
-  Ollama must be running (`ollama serve`) before starting the chat or batch
-  query interfaces. Alternatively, use the Docker Compose service (see below).
-
-## Setup
+**Requirements:** Python 3.11+, Docker, and [Ollama](https://ollama.com).
 
 ```bash
-git clone <repo-url>
-cd <repo-directory>
+git clone https://github.com/kkriday/dais-rag-project.git
+cd dais-rag-project
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+ollama pull llama3.1
 ```
 
-## Running with Docker Compose (Recommended)
-
-Starts PostgreSQL (pgvector) and Ollama together:
+The repo already includes a built index for the three sample reports, so you can
+start the chat app straight away:
 
 ```bash
-docker compose up -d
+streamlit run app/chat_app.py
 ```
 
-Then pull the LLM model inside the Ollama container:
+Then open http://localhost:8501.
 
-```bash
-docker exec ollama_service ollama pull llama3.1
-```
+### Index your own documents
 
-## M02: Ingest Documents → PostgreSQL/pgvector
-
-### 1. Start PostgreSQL
-
-```bash
-docker compose up -d postgres
-```
-
-### 2. Create extension and tables
-
-```bash
-docker exec -it pg_m02 psql -U m02 -d m02db -c "CREATE EXTENSION IF NOT EXISTS vector;"
-docker exec -i pg_m02 psql -U m02 -d m02db <<'SQL'
-CREATE TABLE IF NOT EXISTS documents (
-  doc_id TEXT PRIMARY KEY,
-  source_path TEXT,
-  file_name TEXT,
-  file_type TEXT,
-  file_size_bytes BIGINT,
-  modified_time TIMESTAMPTZ
-);
-CREATE TABLE IF NOT EXISTS chunks (
-  chunk_id TEXT PRIMARY KEY,
-  doc_id TEXT REFERENCES documents(doc_id),
-  chunk_index INTEGER,
-  text_clean TEXT,
-  embedding VECTOR(384)
-);
-SQL
-```
-
-### 3. Place PDFs in `data/input/` and run pipeline
-
-```bash
-python -m app.main
-```
-
-### 4. Verify writes
-
-```bash
-docker exec -it pg_m02 psql -U m02 -d m02db -c "SELECT COUNT(*) FROM documents;"
-docker exec -it pg_m02 psql -U m02 -d m02db -c "SELECT COUNT(*) FROM chunks;"
-```
-
-## M03: Build Index + Chat + Batch Query
-
-### Option A — Full pipeline in one call
+Put PDFs or text files in `data/input/`, then run:
 
 ```python
 from app.pipeline.orchestrate import ingest_corpus
-result = ingest_corpus("data/input/")
-print(result)
+ingest_corpus("data/input/")
 ```
 
-### Option B — Step by step
+### Run the evaluation
 
 ```bash
-# 1. Extract, chunk, and build embeddings index
-python -m app.pipeline.embed
-
-# 2. Start chat interface
-streamlit run app/chat_app.py
-# → open http://localhost:8501
-
-# 3. Run batch evaluation
 python -m app.batch_query --in data/eval_questions.jsonl --out data/eval_results.jsonl --top-k 8
+python -m app.eval_llm_judge --results data/eval_results.jsonl --out data/eval_judge_results.jsonl
 ```
 
-## M04 / M05: Evaluation
+### Optional: PostgreSQL + pgvector
 
-```bash
-# Run all 100 evaluation questions
-python -m app.batch_query --in data/eval_questions.jsonl --out data/eval_results_m05_full.jsonl --top-k 8
-```
+`docker compose up -d` starts PostgreSQL (pgvector) and Ollama in containers.
+`python -m app.main` then writes documents and embedded chunks into the database.
 
-Results include `answer`, `sources`, and `latency_ms` per question.
-
-## Environment Variables
+## Configuration
 
 | Variable | Default | Description |
 |---|---|---|
 | `OLLAMA_URL` | `http://localhost:11434` | Ollama API endpoint |
-| `OLLAMA_MODEL` | `llama3.1` | Model name to use |
-| `DATABASE_URL` | — | PostgreSQL connection string |
+| `OLLAMA_MODEL` | `llama3.1` | Model used for answers and judging |
+| `DATABASE_URL` | local Docker Postgres on port 5433 | PostgreSQL connection string (only needed for pgvector storage) |
+
+## Next steps
+
+- Sentence-boundary chunking, to fix the remaining misses where a fact is buried in a large passage
+- Cross-encoder re-ranking for higher precision in the top results
+- Table-aware extraction for numeric lookups
