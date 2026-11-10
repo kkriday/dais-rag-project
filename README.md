@@ -1,4 +1,4 @@
-# DAIS: Document AI Question-Answering System
+# DAIS: Document-driven Agentic Intelligence System
 
 DAIS is a retrieval-augmented generation (RAG) system that answers natural-language
 questions about long corporate reports. It ingests PDFs, indexes them with hybrid
